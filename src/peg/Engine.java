@@ -53,8 +53,8 @@ public class Engine implements Comparator<Peg_game>{
 			
 			if(item.moves==null){item.getMoves();}
 			for (int i=0; i<item.moves.size();i++) { //visito TUTTI i figli
-				Runnable worker = new Peg_game(item,item.moves.get(i),this);
-				pool.execute(worker);
+				this.addedNodes++;
+				pool.execute((Runnable)new Peg_game(item,item.moves.get(i),this));
 			}
 			
 		} catch (InterruptedException e) {

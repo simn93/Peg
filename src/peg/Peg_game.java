@@ -9,6 +9,8 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 	
 	private Engine Eng;
 	
+	public Vector<Board[][]> traceback;
+	
 	/* Inizializza un classica partita di Peg */
 	public Peg_game(){
 		Table = new Board[][]{	{E,E,P,P,P,E,E},
@@ -23,6 +25,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		V_space = 1;
 		P_space = 32;
 		size = 7;
+		this.traceback = new Vector<Board[][]>();
 	}
 	
 	/* Inizializza una partita di Peg casuale */
@@ -48,6 +51,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		size = 7;
 		
 		//this.Eng = Eng;
+		this.traceback = new Vector<Board[][]>();
 	}
 	
 	/* Inizializza una partita di Peg con uno spazio vuoto a scelta */
@@ -68,6 +72,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		
 		if(i<0 || i>=size || j<0 || j>=size)throw new IllegalArgumentException();
 		if(Table[i][j] == Board.P)Table[i][j] = Board.V;
+		this.traceback = new Vector<Board[][]>();
 	}
 	
 	/* Inizializza un partita di Peg personalizzata*/
@@ -75,6 +80,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		this.size = size;
 		this.Table = new Board[size][size];
 		//this.Eng = Eng;
+		this.traceback = new Vector<Board[][]>();
 		
 		for(int i = 0; i<size;i++){
 			for(int j=0;j<size;j++){
@@ -94,10 +100,13 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		this.pagodavalue = g.pagodavalue;
 		this.Eng = Eng;
 		
+		this.traceback = g.traceback;
+		
 		Table = new Board[size][size];
 		for(int i=0;i<size;i++)for(int j=0;j<size;j++)this.Table[i][j]=g.Table[i][j];
 		
 		this.move(move);
+		this.traceback.add(Table);
 	}
 
 	public int value(){
@@ -297,6 +306,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 	}
 	
 	public void eval(){
+		getMoves();
 		if(size==9){heuristiceval();return;}
 		if(size==7 && (size*size - P_space - V_space)==12){europeanpagodafunctioneval();return;}
 		if(size==7 && (size*size - P_space - V_space)==16){pagoda_matrix_eval();return;}
@@ -367,7 +377,8 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 	@Override
 	public void run() {
 		eval();
-		if (this.value < Eng.limitValue && !Eng.q.contains(this)){Eng.q.add(this);Eng.addedNodes++;}
+		if (this.value < Eng.limitValue && !Eng.q.contains(this)){Eng.q.add(this);}
+		return;
 	}
 }
 
