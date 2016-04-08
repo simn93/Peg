@@ -1,5 +1,8 @@
 package peg;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+@SuppressWarnings("unused")
 public class Peg_game_structure {
 	protected static final Board V = Board.V;
 	protected static final Board P = Board.P;
@@ -9,6 +12,7 @@ public class Peg_game_structure {
 	protected int size;
 	protected int V_space, P_space;
 	
+	protected String string;
 	
 	
 	@Override
@@ -16,15 +20,21 @@ public class Peg_game_structure {
 	    if (other == null) return false;
 	    if (other == this) return true;
 	    if (!(other instanceof Peg_game))return false;
+	    
 	    Peg_game otherPeg_game = (Peg_game)other;
-	    if(this.size != otherPeg_game.size)return false;
+	    //if(this.size != otherPeg_game.size)return false;
 	    
 	    // Controllo le rotazioni
-	    for(int iter=0;iter<4;iter++){
-	    	if(table_equals(otherPeg_game.Table))return true;
-	    	this.Table=rotate(this.Table,size);
-	    }
-	    return false;
+	    //for(int iter=0;iter<4;iter++){
+	    //	if(table_equals(otherPeg_game.Table))return true;
+	    //	this.Table=rotate(this.Table,size);
+	    //}
+	    return this.toString() == otherPeg_game.toString();
+	}
+	
+	@Override
+	public int hashCode(){
+		 return toString(Table,size).hashCode();
 	}
 	
 	private boolean table_equals(Board[][] other){
@@ -35,6 +45,7 @@ public class Peg_game_structure {
 	    }
 		return true;
 	}
+	
 	
 	protected void move(int[] mossa){
 		if(mossa.length != 4) throw new IllegalArgumentException();
@@ -67,6 +78,28 @@ public class Peg_game_structure {
 		}
 		
 		return ret;
+	}
+	
+	public String toString(Board Table[][], int size){
+		if(this.string!=null)return this.string;
+		
+		String ret = "";
+		for(int i=0;i<size;i++){
+			for(int j=0;j<size;j++){
+				ret+=BoardtoChar(Table[i][j]);
+			}
+		}
+		this.string=ret;
+		return ret+size;
+	}
+	
+	public byte BoardtoByte(Board x){
+		switch(x){
+			case P: return 0b11;
+			case V: return 0b10;
+			case E: return 0b00;
+			default: throw new IllegalArgumentException();
+		}
 	}
 	
 	public char BoardtoChar(Board x){

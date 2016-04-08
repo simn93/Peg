@@ -1,15 +1,20 @@
 package peg;
 import java.util.*;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+@SuppressWarnings("unused")
 public class Peg_game extends Peg_game_structure implements Runnable{
 	protected int value=999, pagodavalue=999;
 	public Vector<int[]> moves;
+	private Board[][][] rotation = new Board[4][size][size];
 	
 	private Random generator = new Random(System.nanoTime());
 	
 	private Engine Eng;
 	
-	public Vector<Board[][]> traceback;
+	//public Vector<Board[][]> traceback;
+	public Peg_game father;
 	
 	/* Inizializza un classica partita di Peg */
 	public Peg_game(){
@@ -25,7 +30,8 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		V_space = 1;
 		P_space = 32;
 		size = 7;
-		this.traceback = new Vector<Board[][]>();
+		//this.traceback = new Vector<Board[][]>();
+		this.father=null;
 	}
 	
 	/* Inizializza una partita di Peg casuale */
@@ -51,7 +57,8 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		size = 7;
 		
 		//this.Eng = Eng;
-		this.traceback = new Vector<Board[][]>();
+		//this.traceback = new Vector<Board[][]>();
+		this.father=null;
 	}
 	
 	/* Inizializza una partita di Peg con uno spazio vuoto a scelta */
@@ -72,7 +79,8 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		
 		if(i<0 || i>=size || j<0 || j>=size)throw new IllegalArgumentException();
 		if(Table[i][j] == Board.P)Table[i][j] = Board.V;
-		this.traceback = new Vector<Board[][]>();
+		//this.traceback = new Vector<Board[][]>();
+		this.father=null;
 	}
 	
 	/* Inizializza un partita di Peg personalizzata*/
@@ -80,7 +88,8 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		this.size = size;
 		this.Table = new Board[size][size];
 		//this.Eng = Eng;
-		this.traceback = new Vector<Board[][]>();
+		//this.traceback = new Vector<Board[][]>();
+		this.father=null;
 		
 		for(int i = 0; i<size;i++){
 			for(int j=0;j<size;j++){
@@ -92,21 +101,22 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 	}
 	
 	/* Continua una partita di Peg, facendo una mossa */
-	public Peg_game(Peg_game g, int[] move, Engine Eng) {
+	public Peg_game(Peg_game g, int[] move, Engine Eng, Peg_game father) {
 		this.V_space = g.V_space;
 		this.P_space = g.P_space;
 		this.size = g.size;
 		this.value = g.value;
 		this.pagodavalue = g.pagodavalue;
 		this.Eng = Eng;
+		this.father = father;
 		
-		this.traceback = g.traceback;
-		
+		//this.traceback = g.traceback;
+				
 		Table = new Board[size][size];
 		for(int i=0;i<size;i++)for(int j=0;j<size;j++)this.Table[i][j]=g.Table[i][j];
 		
 		this.move(move);
-		this.traceback.add(Table);
+		//this.traceback.add(.Table);
 	}
 
 	public int value(){
@@ -315,7 +325,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 	}
 	
 	
-	private int[/*6*/][/*7*/][/*7*/] pagodamatrix=    {{{0,  0, 0, 0, 0, 0,  0 },
+	private static final int[/*6*/][/*7*/][/*7*/] pagodamatrix=    {{{0,  0, 0, 0, 0, 0,  0 },
 													  { 0,  0, 0, 1, 0, 0,  0 }, 
 													  { -1, 1, 0, 1, 0, 1, -1 },
 													  { 0,  0, 0, 0, 0, 0,  0 }, 
@@ -358,7 +368,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 													  { 0,  0, 1, 0, 1, 0,  0 }, 
 													  { 0,  0, 0, 0, 0, 0,  0 }}};
 	
-	private int[/*7*/][/*7*/] costMatrix =  new int[][]{{ 0, 0, 4, 0, 4, 0, 0 },
+	private static final int[/*7*/][/*7*/] costMatrix =  new int[][]{{ 0, 0, 4, 0, 4, 0, 0 },
 														{ 0, 0, 0, 0, 0, 0, 0 }, 
 														{ 4, 0, 3, 0, 3, 0, 4 },
 														{ 0, 0, 0, 1, 0, 0, 0 }, 
@@ -366,7 +376,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 														{ 0, 0, 0, 0, 0, 0, 0 }, 
 														{ 0, 0, 4, 0, 4, 0, 0 }};
 														
-	private int[/*7*/][/*7*/] europeanpagodamatrix={{0, 0,-1, 0,-1, 0, 0 },
+	private static final int[/*7*/][/*7*/] europeanpagodamatrix={{0, 0,-1, 0,-1, 0, 0 },
 													{0, 0, 1, 1, 1, 0, 0 },
 													{-1,1, 0, 1, 0, 1, -1},
 													{0, 1, 1, 0, 1, 1, 0 },
@@ -376,8 +386,31 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 
 	@Override
 	public void run() {
+		//Eng.activethread.getAndIncrement();
 		eval();
-		if (this.value < Eng.limitValue && !Eng.q.contains(this)){Eng.q.add(this);}
+		for(int iter=0;iter<4;iter++){
+			this.Table=rotate(this.Table,size);
+	    	rotation[iter] = Table;
+	    }
+		
+		Eng.mtx.lock();
+		if (this.value < Eng.limitValue && !Eng.q2.contains(this.toString())){
+			/*while(Eng.q.size() >= Eng.limitSize -1)
+				try {
+					Eng.fullcnd.await();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+			}*/
+			Eng.q.add(this);
+			for(int iter=0;iter<4;iter++){Eng.q2.add(new Peg_game(rotation[iter],size));}
+							
+			Eng.emptycnd.signal();
+		} //la add mi controlla in automatico se non è già presente
+		Eng.mtx.unlock();
+		
+		//else{Eng.q1.add(this);}
+		Eng.activethread.getAndDecrement();
 		return;
 	}
 }

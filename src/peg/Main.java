@@ -1,24 +1,36 @@
 package peg;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.io.IOException;
 
+import org.joda.time.Duration;
+import org.joda.time.Period;
+import org.joda.time.ReadableInstant;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
+
+@SuppressWarnings("unused")
 public class Main {
 	public static void main(String args[]) {
-		for(int i=0;i<1;i++){
-			for(int j=0;j<1;j++){
+		for(int i=0;i<7;i++){
+			for(int j=0;j<7;j++){
 				
 				Engine E;
-				Peg_game T = new Peg_game(peg_europeo,7);
+				Peg_game T = new Peg_game(i,j);
+				T.eval();
 				E = new Engine(T);
-				
-				
-				
+								
 				System.out.println("========== INIZIO =======");
 				System.out.println(T);
 				
 				long before = System.currentTimeMillis();
-				T = E.completeSearch();
+				try {
+					T = E.completeSearch();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				long after  = System.currentTimeMillis();
 				
 				System.out.println("======== SOLUZIONE ======");
@@ -27,16 +39,44 @@ public class Main {
 				else System.out.println("Nessuna soluzione trovata :(");
 				System.out.println(E);
 				
-				Date date = new Date(after-before);
-				SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss,SSS"); //FIXME:data non corretta
-				System.out.println("Tempo impiegato: " + sdf.format(date) + "\n" + "Traccia");
-				//for(int i1=0;i1<T.traceback.size();i1++){
-				//	System.out.println(new Peg_game(T.traceback.get(i1),T.size));
-				//}
-				System.out.println(T.traceback.size());
+				Duration time = new Duration(before,after);
+				Period p = time.toPeriod();
+				PeriodFormatter fmt = new PeriodFormatterBuilder()
+						.printZeroAlways()
+						.minimumPrintedDigits(1)
+						.appendDays()
+						.appendLiteral("D ")
+						.appendHours()
+						.appendLiteral("h ")
+						.minimumPrintedDigits(2)
+						.appendMinutes()
+						.appendSeparator(":")
+						.appendSecondsWithMillis()
+						.toFormatter();
+				
+				String final_date = fmt.print(p);
+				//time.
+				//SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss,SSS"); //FIXME:data non corretta
+				System.out.println("Tempo impiegato : " + final_date );
+				//TraceBack(T);
 			}
 		}
 	}
+	
+	public static void TraceBack(Peg_game g) {
+		if(g==null){System.out.println( "\n" + "Traccia : "); return;}
+		TraceBack(g.father);
+		System.out.println(g);
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return;
+		}
 	
 	private static final Board V = Board.V;
 	private static final Board P = Board.P;
