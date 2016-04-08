@@ -1,22 +1,24 @@
 package peg;
 import java.util.*;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-@SuppressWarnings("unused")
 public class Peg_game extends Peg_game_structure implements Runnable{
+	/* Value for state analysis */
 	protected int value=999, pagodavalue=999;
-	public Vector<int[]> moves;
-	private Board[][][] rotation = new Board[4][size][size];
 	
-	private Random generator = new Random(System.nanoTime());
-	
+	/* Vector of rotations */
+	@SuppressWarnings("unused")/* Not used. Rates of excessive rotation */
+	private String[] rotation = new String[4];
+		
+	/* Engine link */
 	private Engine Eng;
 	
-	//public Vector<Board[][]> traceback;
+	/* Father link */
 	public Peg_game father;
 	
-	/* Inizializza un classica partita di Peg */
+	/* Random generator */
+	private Random generator = new Random(System.nanoTime());
+	
+	/* Start a classic English Peg */
 	public Peg_game(){
 		Table = new Board[][]{	{E,E,P,P,P,E,E},
 								{E,E,P,P,P,E,E},
@@ -26,15 +28,13 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 								{E,E,P,P,P,E,E},
 								{E,E,P,P,P,E,E}
 		};
-		//this.Eng = Eng;
 		V_space = 1;
 		P_space = 32;
 		size = 7;
-		//this.traceback = new Vector<Board[][]>();
 		this.father=null;
 	}
 	
-	/* Inizializza una partita di Peg casuale */
+	/* Start an English Peg with a random V space */
 	public Peg_game(char not_importat){
 		Table = new Board[][]{	{E,E,P,P,P,E,E},
 								{E,E,P,P,P,E,E},
@@ -56,12 +56,10 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		P_space = 32;
 		size = 7;
 		
-		//this.Eng = Eng;
-		//this.traceback = new Vector<Board[][]>();
 		this.father=null;
 	}
 	
-	/* Inizializza una partita di Peg con uno spazio vuoto a scelta */
+	/* Start an English Peg with a chosen V space */
 	public Peg_game(int i, int j){
 		Table = new Board[][]{	{E,E,P,P,P,E,E},
 								{E,E,P,P,P,E,E},
@@ -75,21 +73,17 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		V_space = 1;
 		P_space = 32;
 		size = 7;
-		//this.Eng = Eng;
-		
+				
 		if(i<0 || i>=size || j<0 || j>=size)throw new IllegalArgumentException();
 		if(Table[i][j] == Board.P)Table[i][j] = Board.V;
-		//this.traceback = new Vector<Board[][]>();
 		this.father=null;
 	}
 	
-	/* Inizializza un partita di Peg personalizzata*/
+	/* Start a custom Peg */
 	public Peg_game(Board[][] start, int size){
-		this.size = size;
+		this.size  = size;
 		this.Table = new Board[size][size];
-		//this.Eng = Eng;
-		//this.traceback = new Vector<Board[][]>();
-		this.father=null;
+		this.father= null;
 		
 		for(int i = 0; i<size;i++){
 			for(int j=0;j<size;j++){
@@ -100,7 +94,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		}
 	}
 	
-	/* Continua una partita di Peg, facendo una mossa */
+	/* Continue a Peg, doing a move */
 	public Peg_game(Peg_game g, int[] move, Engine Eng, Peg_game father) {
 		this.V_space = g.V_space;
 		this.P_space = g.P_space;
@@ -110,70 +104,16 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		this.Eng = Eng;
 		this.father = father;
 		
-		//this.traceback = g.traceback;
-				
 		Table = new Board[size][size];
 		for(int i=0;i<size;i++)for(int j=0;j<size;j++)this.Table[i][j]=g.Table[i][j];
 		
 		this.move(move);
-		//this.traceback.add(.Table);
 	}
 
-	public int value(){
-		return value;
-	}
+	/* Get value of this state */
+	public int value(){return value;}
 	
-	public String toString(){
-		if (Table == null) return "Nessuna soluzione trovata :(";
-		String ret = "";
-		
-		for(int k=0;k<size*2;k++){ret+="-";}
-		ret+="\n";
-		for(int i=0;i<size;i++){
-			for(int j=0;j<size;j++){
-				if(this.Table[i][j] == Board.E)ret+=" ";
-				else ret+= BoardtoChar(this.Table[i][j]);
-				ret+= " ";
-			}
-			ret += "\n";
-		}
-		for(int k=0;k<size*2;k++){ret+="-";}
-		ret+="\n";
-				
-		return ret;
-	}
-
-	public Vector<int[]> getMoves(){
-		if(this.moves != null)return this.moves;
-		
-		int vicino_x, vicino_y, lontano_x, lontano_y;
-		Vector<int[]> ret = new Vector<int[]>();
-		
-		for( int i = 0 ; i < size ; i++ ){
-			for( int j = 0 ; j < size ; j++ ){
-				if(this.Table[i][j] == Board.P){
-					for( int k = 0 ; k < 4 ; k++ ){
-						vicino_x = lontano_x = i;
-						vicino_y = lontano_y = j;
-						if( k==0 ){vicino_y--;lontano_y--;lontano_y--;}	
-						if( k==1 ){vicino_y++;lontano_y++;lontano_y++;}	
-						if( k==2 ){vicino_x--;lontano_x--;lontano_x--;}	
-						if( k==3 ){vicino_x++;lontano_x++;lontano_x++;}
-						
-						if( vicino_x>=0 && vicino_x<size && vicino_y>=0 && vicino_y<size && lontano_x>=0 && lontano_x<size && lontano_y>=0 && lontano_y<size){
-							if(this.Table[vicino_x][vicino_y]==Board.P && this.Table[lontano_x][lontano_y]==Board.V){
-									ret.add(new int[]{i,j,vicino_x,vicino_y});
-							}
-						}						
-					}
-				}
-			}
-		}
-		
-		this.moves = ret;
-		return ret;
-	}
-	
+	/* Evaluates this Peg counting P */
 	public void evalclassic(){
 		// Se non ci sono mosse disponibili, sono in una death_end
 		if(getMoves().size() == 0 && this.P_space > 1){value = 10000000; return;}
@@ -182,10 +122,12 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		if(this.P_space == 1){ value=0; return;}
 		
 		// Uno stato è promettente se è vicino alla soluzione
-		value = this.P_space;// + this.pallini_isolati;
+		value = this.P_space;
+		
 		return;
 	}
 
+	/* Evaluates this Peg using costMatrix */
 	public void matrixeval() {
 		if(getMoves().size() == 0 && this.P_space > 1){value = 10000000; return;}
 		
@@ -204,6 +146,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		return;
 	}
 	
+	/* Evaluates this Peg using Pagoda function's property */
 	public void pagodafunctioneval(){
 		if(getMoves().size() == 0 && this.P_space > 1){value = 10000000; return;}
 		
@@ -229,6 +172,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		return;
 	}
 	
+	/* Evaluates this Peg, using costMatrix for obtain value, and Pagoda function's property for detect Dead-end road */
 	public void pagoda_matrix_eval(){
 		if(getMoves().size() == 0 && this.P_space > 1){value = 10000000; return;}
 		
@@ -266,6 +210,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		return;
 	}
 	
+	/* Evaluates this European Peg using Pagoda function's property */
 	public void europeanpagodafunctioneval(){
 		if(getMoves().size() == 0 && this.P_space > 1){value = 10000000; return;}
 		
@@ -287,17 +232,11 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		return;
 	}
 	
-	public void heuristiceval(){//for 9*9
+	/* Evaluates 9*9 Peg using an Heuristic */
+	public void heuristiceval(){
 		if(getMoves().size() == 0 && this.P_space > 1){value = 10000000; return;}
 		
 		if(this.P_space == 1){ value=0; return;}
-		
-		int[][] Corners = {{0,3},{0,5},{3,0},{3,8},{5,0},{5,8},{8,3},{8,5}};
-		int[][][] Merson_Regions = {{{1,3},{2,3}},{{1,5},{2,5}},
-									{{3,1},{3,2}},{{3,6},{3,7}},
-									{{3,3},{3,4},{4,3},{4,4}},
-									{{5,1},{5,2}},{{5,6},{5,7}},
-									{{6,3},{7,3}},{{6,5},{7,5}}};
 		
 		value=1;
 		
@@ -315,6 +254,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 		return;
 	}
 	
+	/* Eval switcher */
 	public void eval(){
 		getMoves();
 		if(size==9){heuristiceval();return;}
@@ -325,13 +265,15 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 	}
 	
 	
-	private static final int[/*6*/][/*7*/][/*7*/] pagodamatrix=    {{{0,  0, 0, 0, 0, 0,  0 },
+	private static final int[/*6*/][/*7*/][/*7*/] pagodamatrix= 
+													{{{0,  0, 0, 0, 0, 0,  0 },
 													  { 0,  0, 0, 1, 0, 0,  0 }, 
 													  { -1, 1, 0, 1, 0, 1, -1 },
 													  { 0,  0, 0, 0, 0, 0,  0 }, 
 													  { -1, 1, 0, 1, 0, 1, -1 },
 													  { 0,  0, 0, 1, 0, 0,  0 }, 
 													  { 0,  0, 0, 0, 0, 0,  0 }},
+															
 													  {{ 0, 0, 1, 0, 1, 0, 0 },
 													  { 0, 0, 0, 0, 0, 0, 0 }, 
 													  { 1, 0, 1, 0, 1, 0, 1 },
@@ -339,6 +281,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 													  { 1, 0, 1, 0, 1, 0, 1 },
 													  { 0, 0, 0, 0, 0, 0, 0 }, 
 													  { 0, 0, 1, 0, 1, 0, 0 }},
+													  
 						 							  {{ 0, 0, 0, 1, 0, 0, 0 },
 													  { 0, 0, 0, 0, 0, 0, 0 }, 
 													  { 0, 1, 0, 1, 0, 1, 0 },
@@ -346,6 +289,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 													  { 0, 1, 0, 1, 0, 1, 0 },
 													  { 0, 0, 0, 0, 0, 0, 0 }, 
 													  { 0, 0, 0, 1, 0, 0, 0 }}, 
+						 							  
 						 							  {{ 0, 0, -1, 0, -1, 0, 0 },
 													  { 0, 0,  1, 0, 1, 0, 0 }, 
 													  { 0, 0, 0, 0, 0, 0, 0 },
@@ -353,6 +297,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 													  { 0, 0, 0, 0, 0, 0, 0 },
 													  { 0, 0, 1, 0, 1, 0, 0 }, 
 													  { 0, 0, -1, 0, -1, 0, 0 }}, 
+						 							  
 						 							  {{ 0, 0, 0, 0, 0, 0, 0 },
 													  { 0, 0, 0, 1, 0, 0, 0 }, 
 													  { 0, 0, 0, 0, 0, 0, 0 },
@@ -360,6 +305,7 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 													  { 0, 0, 0, 0, 0, 0, 0 },
 													  { 0, 0, 0, 1, 0, 0, 0 }, 
 													  { 0, 0, 0, 0, 0, 0, 0 }},
+						 							  
 													  {{ 0,  0, 0, 0, 0, 0,  0 },
 													  { 0,  0, 1, 0, 1, 0,  0 }, 
 													  { 0,  0, 0, 0, 0, 0,  0 },
@@ -368,7 +314,8 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 													  { 0,  0, 1, 0, 1, 0,  0 }, 
 													  { 0,  0, 0, 0, 0, 0,  0 }}};
 	
-	private static final int[/*7*/][/*7*/] costMatrix =  new int[][]{{ 0, 0, 4, 0, 4, 0, 0 },
+	private static final int[/*7*/][/*7*/] costMatrix = 
+														{{ 0, 0, 4, 0, 4, 0, 0 },
 														{ 0, 0, 0, 0, 0, 0, 0 }, 
 														{ 4, 0, 3, 0, 3, 0, 4 },
 														{ 0, 0, 0, 1, 0, 0, 0 }, 
@@ -376,7 +323,8 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 														{ 0, 0, 0, 0, 0, 0, 0 }, 
 														{ 0, 0, 4, 0, 4, 0, 0 }};
 														
-	private static final int[/*7*/][/*7*/] europeanpagodamatrix={{0, 0,-1, 0,-1, 0, 0 },
+	private static final int[/*7*/][/*7*/] europeanpagodamatrix = 
+													{{0, 0,-1, 0,-1, 0, 0 },
 													{0, 0, 1, 1, 1, 0, 0 },
 													{-1,1, 0, 1, 0, 1, -1},
 													{0, 1, 1, 0, 1, 1, 0 },
@@ -384,32 +332,32 @@ public class Peg_game extends Peg_game_structure implements Runnable{
 													{0, 0, 1, 1, 1, 0, 0 },
 													{0, 0,-1, 0,-1, 0, 0 }};
 
+	private static final int[][] Corners = 
+								{{0,3},{0,5},{3,0},{3,8},{5,0},{5,8},{8,3},{8,5}};
+	
+	private static final int[][][] Merson_Regions = 
+								{{{1,3},{2,3}},{{1,5},{2,5}},
+								{{3,1},{3,2}},{{3,6},{3,7}},
+								{{3,3},{3,4},{4,3},{4,4}},
+								{{5,1},{5,2}},{{5,6},{5,7}},
+								{{6,3},{7,3}},{{6,5},{7,5}}};
+	
 	@Override
 	public void run() {
-		//Eng.activethread.getAndIncrement();
 		eval();
-		for(int iter=0;iter<4;iter++){
-			this.Table=rotate(this.Table,size);
-	    	rotation[iter] = Table;
-	    }
 		
-		Eng.mtx.lock();
-		if (this.value < Eng.limitValue && !Eng.q2.contains(this.toString())){
-			/*while(Eng.q.size() >= Eng.limitSize -1)
-				try {
-					Eng.fullcnd.await();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-			}*/
+		//rotation[0]=this.toString();
+		//rotation[1]=rotate(rotation[0]);
+		//rotation[2]=rotate(rotation[1]);
+		//rotation[3]=rotate(rotation[2]);
+		
+		if (this.value < Eng.limitValue && !Eng.q2.contains(this.toString())){//Controlla in automatico se non è già presente
 			Eng.q.add(this);
-			for(int iter=0;iter<4;iter++){Eng.q2.add(new Peg_game(rotation[iter],size));}
-							
-			Eng.emptycnd.signal();
-		} //la add mi controlla in automatico se non è già presente
-		Eng.mtx.unlock();
+			//for(int i=0;i<4;i++){Eng.q2.add(rotation[i]);}
+			Eng.q2.add(this.toString());
+		} 
 		
-		//else{Eng.q1.add(this);}
+		rotation = null;
 		Eng.activethread.getAndDecrement();
 		return;
 	}
